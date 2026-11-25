@@ -1,0 +1,51 @@
+[
+  {
+    "id MK": 1,
+    "nama MK": "Basis Data",
+    "Jadwal": "Senin, 07:30-10:00",
+    "Dosen": "Wirdayanti, S.T. M.Eng",
+    "Ruangan": "SG 04"
+  },
+  {
+    "id MK": 2,
+    "nama MK": "Rekayasa Perangkat Lunak",
+    "Jadwal": "Senin, 13:00-15:30",
+    "Dosen": "Dr. Deny Wiria Nugraha, S.T., M.Eng.",
+    "Ruangan": "JTI 02"
+  },
+  {
+    "id MK": 3,
+    "nama MK": "Sistem Informasi Geografis",
+    "Jadwal": "Selasa, 07:30-10:00",
+    "Dosen": "Dr. Deny Wiria Nugraha, S.T., M.Eng.",
+    "Ruangan": "JTI 02"
+  },
+  {
+    "id MK": 5,
+    "nama MK": "Interaksi Manusia dan Komputer",
+    "Jadwal": "Selasa, 15:30-17:30",
+    "Dosen": " Dr.Dessy Santi, S.Kom, MT.",
+    "Ruangan": "JTI 02"
+  },
+  {
+    "id MK": 6,
+    "nama MK": "Arsitektur Sistem Komputer",
+    "Jadwal": "Rabu, 10:00-12:00",
+    "Dosen": "Chairunnisa Ar Lamasitudju S.Kom., M.Pd",
+    "Ruangan": "SG 04"
+  },
+  {
+    "id MK": 7,
+    "nama MK": "Kajian Lingkungan Hidup",
+    "Jadwal": "Kamis, 13:00-14:30",
+    "Dosen": "Ir. Yusuf Anshori S.T., M.T.",
+    "Ruangan": "JTI 02"
+  },
+  {
+    "id MK": 8,
+    "nama MK": "Pemrograman Web Lanjutan",
+    "Jadwal": "Jumat, 10:00-12:00",
+    "Dosen": "Nazwa, S.Kom., M.Kom.",
+    "Ruangan": "SG 05"
+  }
+]
