@@ -227,43 +227,49 @@ async function bentukMasuk(versi, input) {
 }
 
     // ---------- handler ----------
-    async function daftarDestinasi(req, res, url) {
+async function daftarDestinasi(req, res, url, versi) {
     let data = await bacaData();
-    const kategori = url.searchParams.get("category");
+    const kategori = url.searchParams.get('category');
     if (kategori) {
         data = data.filter((item) => item.category === kategori);
     }
-    kirimJSON(res, 200, data);
+
+    const hasil = [];
+    for (const item of data) {
+        hasil.push(await bentukKeluar(versi, item));
     }
-    async function detailDestinasi(req, res, id) {
+    kirimJSON(res, 200, hasil);
+}
+
+async function detailDestinasi(req, res, id, versi) {
     const data = await bacaData();
     const item = data.find((d) => d.id === id);
     if (!item) {
         return kirimError(res, 404, `Destinasi dengan id ${id} tidak ditemukan`);
     }
-    kirimJSON(res, 200, item);
-    }
+    kirimJSON(res, 200, await bentukKeluar(versi, item));
+}
 
-    async function tambahDestinasi(req, res) {
-    const input = await bacaBody(req);
+async function tambahDestinasi(req, res, versi) {
+    const input = await bentukMasuk(versi, await bacaBody(req));
     const item = await buatDestinasi(input);
-    res.setHeader("Location", `/destinations/${item.id}`);
-    kirimJSON(res, 201, item);
-    }
+    res.setHeader('Location', `/\${versi}/destinations/\${item.id}`);
+    kirimJSON(res, 201, await bentukKeluar(versi, item));
+}
 
-    async function ubahDestinasi(req, res, id) {
-    const input = await bacaBody(req);
+async function ubahDestinasi(req, res, id, versi) {
+    const body = await bacaBody(req);
     const data = await bacaData();
     const index = data.findIndex((d) => d.id === id);
     if (index === -1) {
         return kirimError(res, 404, `Destinasi dengan id ${id} tidak ditemukan`);
     }
 
-    const bersih = await periksaDestinasi(input);
+    const bersih = await periksaDestinasi(await bentukMasuk(versi, body));
     data[index] = { id: id, ...bersih };
     await simpanData(data);
-    kirimJSON(res, 200, data[index]);
-    }
+    kirimJSON(res, 200, await bentukKeluar(versi, data[index]));
+}
     async function hapusDestinasi(req, res, id) {
     const data = await bacaData();
     const index = data.findIndex((d) => d.id === id);
@@ -541,7 +547,8 @@ function lengkapiDestinasi(item) {
     kirimJSON(res, 200, hasil);
     }
    // ---------- router ----------
-    async function router(req, res) {
+    // ---------- router ----------
+async function router(req, res) {
     const url = new URL(req.url, 'http://localhost');
     const segmen = url.pathname.split('/').filter(Boolean);
 
@@ -556,47 +563,60 @@ function lengkapiDestinasi(item) {
         return tanganiGraphQL(req, res);
     }
 
-    if (segmen[0] === 'regions' && segmen.length <= 2) {
-        return tanganiRegions(req, res, segmen);
+    // Alamat REST wajib diawali versi: /v1/... atau /v2/...
+    const versi = segmen[0];
+    if (versi !== 'v1' && versi !== 'v2') {
+        return kirimError(res, 404, 'Alamat harus diawali /v1 atau /v2');
     }
 
-    if (segmen[0] !== 'destinations' || segmen.length > 2) {
+    const alamat = segmen.slice(1);
+
+    if (versi === 'v2' && alamat[0] === 'regions' && alamat.length <= 2) {
+        return tanganiRegions(req, res, alamat);
+    }
+
+    if (alamat[0] !== 'destinations' || alamat.length > 2) {
         return kirimError(res, 404, 'Endpoint tidak ditemukan');
     }
 
-    // Endpoint koleksi: /destinations
-    if (segmen.length === 1) {
-        if (req.method === 'GET') return daftarDestinasi(req, res, url);
+    // Endpoint koleksi: /v1/destinations dan /v2/destinations
+    if (alamat.length === 1) {
+        if (req.method === 'GET') {
+            return daftarDestinasi(req, res, url, versi);
+        }
+
         if (req.method === 'POST') {
-        wajibLogin(bacaPengguna(req));
-        return tambahDestinasi(req, res);
+            wajibLogin(bacaPengguna(req));
+            return tambahDestinasi(req, res, versi);
         }
 
         res.setHeader('Allow', 'GET, POST');
         return kirimError(res, 405, `Method ${req.method} tidak didukung pada endpoint ini`);
     }
 
-    // Endpoint item: /destinations/:id
-    const id = Number(segmen[1]);
+    // Endpoint item: /v1/destinations/:id dan /v2/destinations/:id
+    const id = Number(alamat[1]);
     if (!Number.isInteger(id) || id < 1) {
         return kirimError(res, 400, 'id harus berupa bilangan bulat positif');
     }
 
-    if (req.method === 'GET') return detailDestinasi(req, res, id);
+    if (req.method === 'GET') {
+        return detailDestinasi(req, res, id, versi);
+    }
 
     if (req.method === 'PUT') {
         wajibLogin(bacaPengguna(req));
-        return ubahDestinasi(req, res, id);
+        return ubahDestinasi(req, res, id, versi);
     }
 
     if (req.method === 'DELETE') {
-    wajibRole(bacaPengguna(req), ['admin']);
-    return hapusDestinasi(req, res, id);
+        wajibRole(bacaPengguna(req), ['admin']);
+        return hapusDestinasi(req, res, id);
     }
 
     res.setHeader('Allow', 'GET, PUT, DELETE');
     return kirimError(res, 405, `Method ${req.method} tidak didukung pada endpoint ini`);
-    }
+}
     // ---------- server ----------
     const server = http.createServer(async (req, res) => {
     res.on("finish", () => {
