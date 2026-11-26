@@ -229,17 +229,28 @@ async function bentukMasuk(versi, input) {
 
     // ---------- handler ----------
 async function daftarDestinasi(req, res, url, versi) {
-    let data = await bacaData();
-    const kategori = url.searchParams.get('category');
-    if (kategori) {
-        data = data.filter((item) => item.category === kategori);
-    }
+  let data = await bacaData();
+  const kategori = url.searchParams.get('category');
+  if (kategori) {
+    data = data.filter((item) => item.category === kategori);
+  }
 
-    const hasil = [];
-    for (const item of data) {
-        hasil.push(await bentukKeluar(versi, item));
+  if (versi === 'v2') {
+    const regionIdParam = url.searchParams.get('regionId');
+    if (regionIdParam !== null) {
+      const regionId = Number(regionIdParam);
+      if (!Number.isInteger(regionId) || regionId < 1) {
+        return kirimError(res, 400, 'regionId harus berupa bilangan bulat positif');
+      }
+      data = data.filter((item) => item.regionId === regionId);
     }
-    kirimJSON(res, 200, hasil);
+  }
+
+  const hasil = [];
+  for (const item of data) {
+    hasil.push(await bentukKeluar(versi, item));
+  }
+  kirimJSON(res, 200, hasil);
 }
 
 async function detailDestinasi(req, res, id, versi) {
