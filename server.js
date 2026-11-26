@@ -406,10 +406,11 @@ async function tanganiLogin(req, res) {
             weather: Weather
         }
 
-        type Weather {
+       type Weather {
             temperature: Float
-            windSpeed: Float
-            time: String
+            windSpeed: Float @deprecated(reason: "Gunakan field windSpeedKmh sebagai pengganti")
+             windSpeedKmh: Float
+             weatherCode: Int
         }
 
         type Query {
@@ -452,6 +453,7 @@ async function ambilCuaca(region) {
     return {
         temperature: hasil.current.temperature_2m,
         windSpeed: hasil.current.wind_speed_10m,
+        windSpeedKmh: hasil.current.wind_speed_10m,
         time: hasil.current.time
     };
 }
