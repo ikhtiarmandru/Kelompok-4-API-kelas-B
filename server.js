@@ -575,14 +575,32 @@ async function router(req, res) {
         return tanganiGraphQL(req, res);
     }
 
-    // Alamat REST wajib diawali versi: /v1/... atau /v2/...
-    const versi = segmen[0];
-    if (versi !== 'v1' && versi !== 'v2') {
-        return kirimError(res, 404, 'Alamat harus diawali /v1 atau /v2');
+    let versi;
+    let alamat;
+
+    if (segmen[0] === 'v1' || segmen[0] === 'v2') {
+        versi = segmen[0];
+        alamat = segmen.slice(1);
+    } else {
+        const headerVersi = req.headers['x-api-version'];
+        if (!headerVersi) {
+            return kirimError(
+                res,
+                400,
+                'Versi API wajib disertakan melalui awalan URI (/v1 atau /v2) atau header x-api-version (1 atau 2)'
+            );
+        }
+        if (headerVersi !== '1' && headerVersi !== '2') {
+            return kirimError(
+                res,
+                400,
+                'Nilai header x-api-version tidak valid. Gunakan 1 atau 2, atau gunakan awalan URI /v1 atau /v2'
+            );
+        }
+        versi = `v${headerVersi}`;
+        alamat = segmen;
     }
 
-    const alamat = segmen.slice(1);
-    
     if (versi === 'v1') {
         res.setHeader('Sunset', new Date(V1_BERAKHIR).toUTCString());
     }
